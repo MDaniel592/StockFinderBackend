@@ -1,0 +1,3 @@
+[submodule "database/stockfinder_models"]
+	path = database/stockfinder_models
+	url = https://github.com/MDaniel592/StockFinderModels

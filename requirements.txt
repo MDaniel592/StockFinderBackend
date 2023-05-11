@@ -1,0 +1,14 @@
+Flask==2.2.2
+flask_cors==3.0.10
+psycopg2==2.9.3
+requests==2.25.1
+SQLAlchemy==1.4.41
+python-telegram-bot==13.14
+ujson==5.4.0
+Werkzeug==2.2.2
+yagmail==0.15.293
+PyJWT==2.5.0
+gunicorn==20.1.0
+python-dotenv==0.21.0
+pandas==1.5.2
+influxdb-client==1.35.0

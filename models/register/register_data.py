@@ -1,0 +1,8 @@
+EMAIL = "email"
+EMAIL_CODE = "emailConfirmCode"
+PASSWORD = "password"
+PASSWORD_CONFIRMATION = "passwordConfirmation"
+TELEGRAM_ID = "telegram"
+TELEGRAM_CODE = "telegramConfirmCode"
+PARAM_NAME = "paramName"
+PARAM_VALUE = "paramValue"

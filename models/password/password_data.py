@@ -1,0 +1,6 @@
+EMAIL = "email"
+EMAIL_CODE = "emailConfirmCode"
+TELEGRAM_ID = "telegram"
+PASSWORD = "password"
+NEW_PASSWORD = "newPassword"
+CURRENT_PASSWORD = "currentPassword"
