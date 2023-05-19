@@ -5,7 +5,6 @@ from collections import defaultdict
 
 import server as server
 import utils.error_messages as errors
-from flask import flash
 from utils.unalix.core.url_cleaner import clear_url
 
 logger = logging.getLogger(__name__)
@@ -107,10 +106,8 @@ def is_email_valid(email):
         return errors.EMAIL_NOT_VALID, False
 
     if len(email) < MIN_LEN_EMAIL:
-        flash("Email muy corto, no es válido", category="error")
         return errors.EMAIL_TOO_SHORT, False
     elif len(email) > MAX_LEN_EMAIL:
-        flash("Email muy largo, no es válido", category="error")
         return errors.EMAIL_TOO_LONG, False
 
     return "", True
