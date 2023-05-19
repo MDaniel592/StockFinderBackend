@@ -170,7 +170,8 @@
       "exceptions": [],
       "redirections": [
         "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?google(?:\\.[a-z]{2,}){1,}\\/amp\\/s\\/([^&]*)",
-        "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?google(?:\\.[a-z]{2,}){1,}\\/img.+\\?imgurl=([^&]*)"
+        "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?google(?:\\.[a-z]{2,}){1,}\\/img.+(?:\\?|&)imgurl=([^&]*)",
+        "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?google(?:\\.[a-z]{2,}){1,}\\/aclk.+(?:\\?|&)adurl=([^&]*)"
       ],
       "forceRedirection": true
     },
@@ -202,7 +203,8 @@
         "position",
         "type",
         "tracking_id",
-        "quantity"
+        "quantity",
+        "reference_id"
       ],
       "referralMarketing": [],
       "rawRules": [],
@@ -663,6 +665,43 @@
       "completeProvider": false,
       "rules": [
         "cache"
+      ],
+      "referralMarketing": [],
+      "rawRules": [],
+      "exceptions": [],
+      "redirections": [],
+      "forceRedirection": false
+    },
+    "allshops": {
+      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?allshops\\.me",
+      "completeProvider": false,
+      "rules": [],
+      "referralMarketing": [],
+      "rawRules": [],
+      "exceptions": [],
+      "redirections": [
+        "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?allshops\\.me\\/redirect\\/.+to=([^&]*)"
+      ],
+      "forceRedirection": false
+    },
+    "shareasale": {
+      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?shareasale\\.com",
+      "completeProvider": false,
+      "rules": [],
+      "referralMarketing": [],
+      "rawRules": [],
+      "exceptions": [],
+      "redirections": [
+        "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?shareasale\\.com\\/r\\.cfm.+urllink=([^&]*)"
+      ],
+      "forceRedirection": false
+    },
+    "udemy": {
+      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?udemy\\.com",
+      "completeProvider": false,
+      "rules": [
+        "ran[A-Za-z]+",
+        "LSNPUBID"
       ],
       "referralMarketing": [],
       "rawRules": [],
