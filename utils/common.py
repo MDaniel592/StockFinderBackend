@@ -6,15 +6,27 @@ from collections import defaultdict
 import server as server
 import utils.error_messages as errors
 from flask import flash
-from utils.unalix._core import clear_url
+from utils.unalix.core.url_cleaner import clear_url
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.propagate = True
 
 
-SHOPS = ["aussar.es", "coolmod.com", "casemod.es", "izarmicro.net", "neobyte.es", "ldlc.com", "pccomponentes.com", "speedler.es", "vsgamers.es"]
-REGEX_EMAILS = "@gmail.com|@hotmail.com|@hotmail.es|@outlook.com|@outlook.es|@\S+.mozmail.com"
+SHOPS = [
+    "aussar.es",
+    "coolmod.com",
+    "casemod.es",
+    "izarmicro.net",
+    "neobyte.es",
+    "ldlc.com",
+    "pccomponentes.com",
+    "speedler.es",
+    "vsgamers.es",
+]
+REGEX_EMAILS = (
+    "@gmail.com|@hotmail.com|@hotmail.es|@outlook.com|@outlook.es|@\S+.mozmail.com"
+)
 
 MIN_LEN_EMAIL = 10
 MAX_LEN_EMAIL = 40
@@ -35,15 +47,16 @@ def is_spam(user_ip=None, email=None):
     if not user_ip:
         return False, 0
 
-    spams = getattr(server, "spams", defaultdict(dict))
-    spam_data = spams[user_ip]
+    user_ip = str(user_ip)
+    spam_data = server.spams.get(user_ip, defaultdict(dict))
 
-    if spam_data.get("banned", 0) > time():
+    current_time = time.ctime()
+    if spam_data.get("banned", current_time) > current_time:
         return True, spam_data["banned"]
 
     messages = spam_data.get("messages", 0)
-    last_time = spam_data.get("last_time", 0)
-    now = time()
+    last_time = spam_data.get("last_time", current_time)
+    now = current_time
 
     if messages >= SPAM_MAX_MESSAGES and now - last_time < SPAM_MAX_INTERVAL:
         spam_data["banned"] = now + SPAM_BAN_TIME
@@ -53,8 +66,7 @@ def is_spam(user_ip=None, email=None):
     spam_data["messages"] = messages + 1
     spam_data["last_time"] = now
 
-    spams[user_ip] = spam_data
-    server.spams = spams
+    server.spams[user_ip] = spam_data
 
     return False, 0
 
@@ -88,7 +100,9 @@ def is_email_valid(email):
     if (
         not re.match(r"[^@]+@[^@]+\.[^@]+", email)
         or not re.match(REGEX_EMAILS, provider)
-        or not re.fullmatch(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", email)
+        or not re.fullmatch(
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", email
+        )
     ):
         return errors.EMAIL_NOT_VALID, False
 
@@ -137,16 +151,19 @@ def extract_shop(url):
 # URL clear
 ########################
 def fix_clear_url(shop_name, url):
-    if shop_name != "Unknown":
-        if shop_name != "DECATHLON":
-            url = clear_url(url)
-        if shop_name == "PCCOMPONENTES":
-            if "/amp/" in url:
-                url = url.replace("/amp/", "/")
-        if url.find("?") != -1:
-            url = url.split("?")[0]
+    if shop_name == "Unknown":
+        url = url.rstrip("/")  # Remove trailing slash if present
+        return url
 
-    url = url[:-1] if url[len(url) - 1] == "/" else url
+    url = clear_url(url)
+
+    if shop_name == "PCCOMPONENTES" and "/amp/" in url:
+        url = url.replace("/amp/", "/")
+
+    if "?" in url:
+        url = url.split("?")[0]  # Remove query parameters
+
+    url = url.rstrip("/")  # Remove trailing slash if present
     return url
 
 
