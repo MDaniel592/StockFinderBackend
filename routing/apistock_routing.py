@@ -66,6 +66,7 @@ SPECS_VALUES = {
     "RX6800XT": "Radeon RX 6800 XT",
     "RX6900XT": "Radeon RX 6900 XT",
     "RX6950XT": "Radeon RX 6950 XT",
+    "RX7600": "Radeon RX 7600",
     "RX7900XT": "Radeon RX 7900 XT",
     "RX7900XTX": "Radeon RX 7900 XTX",
 }
