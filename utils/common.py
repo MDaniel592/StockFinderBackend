@@ -37,8 +37,8 @@ MAX_LEN_PASS = 24
 # Anti-spam
 ########################
 
-SPAM_MAX_MESSAGES = 5
-SPAM_MAX_INTERVAL = 5  # Seconds
+SPAM_MAX_MESSAGES = 10
+SPAM_MAX_INTERVAL = 10  # Seconds
 SPAM_BAN_TIME = 900  # Seconds
 
 
@@ -49,7 +49,7 @@ def is_spam(user_ip=None, email=None):
     user_ip = str(user_ip)
     spam_data = server.spams.get(user_ip, defaultdict(dict))
 
-    current_time = time.ctime()
+    current_time = time.time()
     if spam_data.get("banned", current_time) > current_time:
         return True, spam_data["banned"]
 
@@ -57,7 +57,7 @@ def is_spam(user_ip=None, email=None):
     last_time = spam_data.get("last_time", current_time)
     now = current_time
 
-    if messages >= SPAM_MAX_MESSAGES and now - last_time < SPAM_MAX_INTERVAL:
+    if messages >= SPAM_MAX_MESSAGES and (now - last_time) < SPAM_MAX_INTERVAL:
         spam_data["banned"] = now + SPAM_BAN_TIME
         spam_data["messages"] = 0
         return True, spam_data["banned"]

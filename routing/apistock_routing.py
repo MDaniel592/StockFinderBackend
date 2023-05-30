@@ -48,6 +48,7 @@ SPECS_VALUES = {
     "RTX3090": "GeForce RTX 3090",
     "RTX3090LHR": "GeForce RTX 3090 LHR",
     "RTX3090TI": "GeForce RTX 3090 Ti",
+    "RTX4060TI": "GeForce RTX 4060 Ti",
     "RTX4070": "GeForce RTX 4070",
     "RTX4070TI": "GeForce RTX 4070 Ti",
     "RTX4080": "GeForce RTX 4080",
@@ -65,6 +66,7 @@ SPECS_VALUES = {
     "RX6800XT": "Radeon RX 6800 XT",
     "RX6900XT": "Radeon RX 6900 XT",
     "RX6950XT": "Radeon RX 6950 XT",
+    "RX7600": "Radeon RX 7600",
     "RX7900XT": "Radeon RX 7900 XT",
     "RX7900XTX": "Radeon RX 7900 XTX",
 }
@@ -253,8 +255,12 @@ def get_category_products(category):
             cursor.execute(query)
             products_dict = dict(cursor.fetchone())
 
-    products_dict["max_price"] = int(math.ceil(products_dict["max_price"] / 100.0)) * 100
-    products_dict["min_price"] = int(math.floor(products_dict["min_price"] / 100.0)) * 100
+    products_dict["max_price"] = (
+        int(math.ceil(products_dict["max_price"] / 100.0)) * 100
+    )
+    products_dict["min_price"] = (
+        int(math.floor(products_dict["min_price"] / 100.0)) * 100
+    )
 
     valid_messages.petition_completed(f"category: {category}")
     return products_dict
@@ -311,7 +317,9 @@ def deals():
     for row in rows:
         row_data = dict(row)
         # Base Models (Insensitive to TI or LHR)
-        gpu_model = re.findall("RTX \d+(?: Ti)?|RX \d+ XT[X]?|RX \d+", row_data["value"], re.IGNORECASE)
+        gpu_model = re.findall(
+            "RTX \d+(?: Ti)?|RX \d+ XT[X]?|RX \d+", row_data["value"], re.IGNORECASE
+        )
         if not gpu_model:
             continue
         gpu_model = gpu_model[0]
@@ -329,11 +337,21 @@ def deals():
             continue
 
         if saved_row and gpu_exceptions.get(gpu_model, True):
-            if saved_row["manufacturer"] == manufacturer and gpu_number >= saved_row["gpu_number"] and row_data["price"] < saved_row["price"] * 1.1:
-                nvidia_counter = nvidia_counter - 1 if manufacturer == "NVIDIA" else nvidia_counter
+            if (
+                saved_row["manufacturer"] == manufacturer
+                and gpu_number >= saved_row["gpu_number"]
+                and row_data["price"] < saved_row["price"] * 1.1
+            ):
+                nvidia_counter = (
+                    nvidia_counter - 1 if manufacturer == "NVIDIA" else nvidia_counter
+                )
                 amd_counter = amd_counter - 1 if manufacturer == "AMD" else amd_counter
                 data[manufacturer].pop(saved_row["gpu_model"])
-            elif saved_row["manufacturer"] == manufacturer and saved_row["gpu_number"] >= gpu_number and saved_row["price"] < row_data["price"]:
+            elif (
+                saved_row["manufacturer"] == manufacturer
+                and saved_row["gpu_number"] >= gpu_number
+                and saved_row["price"] < row_data["price"]
+            ):
                 continue
 
         row_data["gpu_model"] = gpu_model
@@ -344,7 +362,9 @@ def deals():
         models_added[gpu_model] = row_data["price"]
 
         data[manufacturer][gpu_model] = row_data["products"][0]
-        nvidia_counter = nvidia_counter + 1 if manufacturer == "NVIDIA" else nvidia_counter
+        nvidia_counter = (
+            nvidia_counter + 1 if manufacturer == "NVIDIA" else nvidia_counter
+        )
         amd_counter = amd_counter + 1 if manufacturer == "AMD" else amd_counter
         continue
 
