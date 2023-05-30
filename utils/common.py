@@ -23,9 +23,7 @@ SHOPS = [
     "speedler.es",
     "vsgamers.es",
 ]
-REGEX_EMAILS = (
-    "@gmail.com|@hotmail.com|@hotmail.es|@outlook.com|@outlook.es|@\S+.mozmail.com"
-)
+REGEX_EMAILS = "@gmail.com|@hotmail.com|@hotmail.es|@outlook.com|@outlook.es|@\S+.mozmail.com"
 
 MIN_LEN_EMAIL = 10
 MAX_LEN_EMAIL = 40
@@ -38,7 +36,7 @@ MAX_LEN_PASS = 24
 ########################
 
 SPAM_MAX_MESSAGES = 10
-SPAM_MAX_INTERVAL = 10  # Seconds
+SPAM_MAX_INTERVAL = 5  # Seconds
 SPAM_BAN_TIME = 900  # Seconds
 
 
@@ -99,9 +97,7 @@ def is_email_valid(email):
     if (
         not re.match(r"[^@]+@[^@]+\.[^@]+", email)
         or not re.match(REGEX_EMAILS, provider)
-        or not re.fullmatch(
-            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", email
-        )
+        or not re.fullmatch(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", email)
     ):
         return errors.EMAIL_NOT_VALID, False
 
