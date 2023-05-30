@@ -31,7 +31,7 @@ def send_code(receiver_email):
     code = "".join(random.choices(string.ascii_uppercase + string.digits, k=CODE_LENGTH))
     message = [f"Para completar el registro introduce en la web el siguiente código: {code}"]
 
-    result = send_mail(receiver_email, "Clave de validación - StockTracker", message)
+    result = send_mail(receiver_email, "Clave de validación - StockFinder", message)
 
     logger.warning(f"Código de email enviado a: {receiver_email} - Code: {code}")
     return code if result else False
