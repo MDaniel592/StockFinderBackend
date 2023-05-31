@@ -37,7 +37,7 @@ def get_influx_url():
     :return: string of influxDB URL
     """
 
-    if HOSTNAME:
+    if HOSTNAME == "Docker":
         # Localhost / Docker
         return INFLUXDB_LOCAL_URL
     else:
