@@ -18,7 +18,6 @@ logger.propagate = True
 
 
 def valid_data_recv(request_body, check):
-
     if not request_body:
         return generate_error_data(errors.REQUEST_EMPTY), HTTPStatus.UNAUTHORIZED
 
@@ -32,6 +31,7 @@ def valid_data_recv(request_body, check):
 
     user_data = {"user_ip": user_ip}
 
+    request_copy = None
     if request_body.get("password", False):
         try:
             request_copy = copy.deepcopy(request_body)
@@ -40,7 +40,17 @@ def valid_data_recv(request_body, check):
         except:
             logger.error("Could not deepcopy password or remove it from the dict")
             pass
-    else:
+
+    if request_body.get("passwordConfirmation", False):
+        try:
+            request_copy = copy.deepcopy(request_body)
+            request_copy.pop("passwordConfirmation")
+            logger.info(request_copy)
+        except:
+            logger.error("Could not deepcopy password or remove it from the dict")
+            pass
+
+    if not request_copy:
         logger.info(request_body)
 
     if check == "SPAM":
@@ -48,7 +58,6 @@ def valid_data_recv(request_body, check):
 
     ####################################################################################################
     elif check == "UserLogin":
-
         if not hcaptchaToken.RESPONSE in request_body:
             return generate_error_data(errors.LOGIN_HCAPTCHA_NOTFOUND_ERROR, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -68,7 +77,6 @@ def valid_data_recv(request_body, check):
             return generate_error_data(errors.PARAM_NOT_VALID, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
     ####################################################################################################
     elif check == "Validate":
-
         if not request_body[auth_data.TOKEN] or request_body[auth_data.TOKEN] == "":
             return generate_error_data(errors.LOGIN_ERROR, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -78,7 +86,6 @@ def valid_data_recv(request_body, check):
             return generate_error_data(errors.TOKEN_INVALID, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
     ####################################################################################################
     elif check == "EmailPasswordReset":
-
         if (not password_data.EMAIL in request_body) or (request_body[password_data.EMAIL] == ""):
             return generate_error_data(errors.EMAIL_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -97,7 +104,6 @@ def valid_data_recv(request_body, check):
 
     ####################################################################################################
     elif check == "PasswordReset":
-
         if (not auth_data.TOKEN in request_body) or (request_body[auth_data.TOKEN] == ""):
             return generate_error_data(errors.TOKEN_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -148,7 +154,6 @@ def valid_data_recv(request_body, check):
 
     ####################################################################################################
     elif check == "RegisterAlert":
-
         if (not auth_data.TOKEN in request_body) or (request_body[auth_data.TOKEN] == ""):
             return generate_error_data(errors.TOKEN_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -183,7 +188,6 @@ def valid_data_recv(request_body, check):
             return generate_error_data(errors.PARAM_NOT_VALID, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
     ####################################################################################################
     elif check == "UpdateAlert":
-
         if (not auth_data.TOKEN in request_body) or (request_body[auth_data.TOKEN] == ""):
             return generate_error_data(errors.TOKEN_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -201,7 +205,6 @@ def valid_data_recv(request_body, check):
 
     ####################################################################################################
     elif check == "DeleteAlert":
-
         if (not auth_data.TOKEN in request_body) or (request_body[auth_data.TOKEN] == ""):
             return generate_error_data(errors.TOKEN_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -214,7 +217,6 @@ def valid_data_recv(request_body, check):
             return generate_error_data(errors.PARAM_NOT_VALID), HTTPStatus.UNAUTHORIZED
     ####################################################################################################
     elif check == "UserInfo":
-
         if (not register_data.EMAIL in request_body) or (request_body[register_data.EMAIL] == ""):
             return generate_error_data(errors.EMAIL_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -234,7 +236,6 @@ def valid_data_recv(request_body, check):
 
     ####################################################################################################
     elif check == "TelegramID":
-
         if not register_data.TELEGRAM_ID in request_body:
             return generate_error_data(errors.TELEGRAM_ID_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -247,7 +248,6 @@ def valid_data_recv(request_body, check):
             return generate_error_data(errors.PARAM_NOT_VALID, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
     ####################################################################################################
     elif check == "GenerateCode":
-
         if (not register_data.PARAM_NAME in request_body) or (request_body[register_data.PARAM_NAME] == ""):
             return generate_error_data(errors.USER_IP_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -262,7 +262,6 @@ def valid_data_recv(request_body, check):
 
     ####################################################################################################
     elif check == "VerifyRegisterCodes":
-
         if not register_data.EMAIL in request_body or request_body[register_data.EMAIL] == "":
             return generate_error_data(errors.EMAIL_CODE_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -281,7 +280,6 @@ def valid_data_recv(request_body, check):
 
     ####################################################################################################
     elif check == "VerifyTelegramCode":
-
         if not register_data.EMAIL in request_body or request_body[register_data.EMAIL] == "":
             return generate_error_data(errors.EMAIL_CODE_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
@@ -289,6 +287,20 @@ def valid_data_recv(request_body, check):
             user_data["email"] = str(request_body[register_data.EMAIL]).lower()
         except:
             return generate_error_data(errors.PARAM_NOT_VALID, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
+
+    ####################################################################################################
+    elif check == "DeleteUser":
+        if not request_body[auth_data.TOKEN] or request_body[auth_data.TOKEN] == "":
+            return generate_error_data(errors.TOKEN_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
+
+        if not auth_data.PASSWORD in request_body or request_body[auth_data.PASSWORD] == "":
+            return generate_error_data(errors.PASSWORD_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
+
+        try:
+            user_data["token"] = str(request_body[auth_data.TOKEN])
+            user_data["password"] = str(request_body[auth_data.PASSWORD])
+        except:
+            return generate_error_data(errors.TOKEN_INVALID, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
     ####################################################################################################
     else:
