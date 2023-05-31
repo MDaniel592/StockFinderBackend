@@ -5,12 +5,15 @@ import models.auth.auth_data as auth_data
 import models.jwt.JwtToken as Token
 import utils.error_messages as errors
 import utils.valid_messages as valid_messages
+from database.stockfinder_models.Alert import Alert
 from database.stockfinder_models.base import Session
+from database.stockfinder_models.Message import Message
 from database.stockfinder_models.User import User
 from flask import Blueprint, request
 from utils.common import is_email_valid
 from utils.error_messages_management import generate_error_data
 from utils.validate_inputs import valid_data_recv
+from werkzeug.security import check_password_hash
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -42,7 +45,6 @@ def get_user_info():
 
     session = Session()
     user_found = session.query(User).filter(User.email == email).first()
-
     if not user_found:
         session.close()
         return generate_error_data(errors.USER_NOT_EXISTS, user_ip=user_data["user_ip"]), HTTPStatus.UNAUTHORIZED
@@ -167,4 +169,57 @@ def check_user():
     data["status"] = "ok"
     data["ok"] = "El usuario existe"
     valid_messages.petition_completed("check_user")
+    return data, HTTPStatus.OK
+
+
+@user_routing_blueprint.route("/delete_user", methods=["POST"])
+def delete_user():
+    """
+    Delete a user if the token received is valid.
+
+    :return: a JSON with status key error/ok keys and a HTTP Status Code
+    """
+    request_body = request.json
+    data, status = valid_data_recv(request_body, "DeleteUser")
+    if status != HTTPStatus.OK:
+        return data, status
+    user_data = data
+
+    # Validamos el token
+    decoded_token, decode_result = Token.JwtToken.decode(user_data["token"])
+    if not decode_result:
+        return generate_error_data(errors.TOKEN_INVALID, user_ip=user_data["user_ip"]), HTTPStatus.UNAUTHORIZED
+
+    email = decoded_token[auth_data.EMAIL]
+    session = Session()
+    user_found = session.query(User).filter(User.email == email).first()
+    if not user_found:
+        session.close()
+        return generate_error_data(errors.USER_NOT_EXISTS, user_ip=user_data["user_ip"]), HTTPStatus.UNAUTHORIZED
+
+    data["user_data"] = {"telegram": user_found.telegram, "email": user_found.email, "pass": user_found.password, "role": user_found.role.name}
+    data["is_user_valid"] = True
+
+    user_validation = data
+    if not user_validation["is_user_valid"]:
+        session.close()
+        return generate_error_data(user_validation["error"], user_ip=user_data["user_ip"]), HTTPStatus.UNAUTHORIZED
+
+    # Comparo los hashes de las contraseñas, si no son iguales, salgo
+    # Verificamos que la contraseña que el usuario ha introducido y la que está en la BD es la misma
+    if not check_password_hash(user_validation["user_data"]["pass"], user_data["password"]):
+        session.close()
+        return generate_error_data(errors.PASSWORD_ERROR, user_ip=user_data["user_ip"]), HTTPStatus.UNAUTHORIZED
+
+    session.query(Message).filter(Message.user_id == user_found._id).delete(synchronize_session=False)
+    session.query(Alert).filter(Alert.user_id == user_found._id).delete(synchronize_session=False)
+    session.query(User).filter(User.email == email).delete(synchronize_session=False)
+    session.commit()
+    session.close()
+
+    logger.warning(f"Se ha eliminado el usuario con email: {email}")
+    data = {}
+    data["status"] = "ok"
+    data["ok"] = "Se ha eliminado el usuario"
+    valid_messages.petition_completed("delete_user")
     return data, HTTPStatus.OK

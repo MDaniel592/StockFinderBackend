@@ -289,6 +289,20 @@ def valid_data_recv(request_body, check):
             return generate_error_data(errors.PARAM_NOT_VALID, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
 
     ####################################################################################################
+    elif check == "DeleteUser":
+        if not request_body[auth_data.TOKEN] or request_body[auth_data.TOKEN] == "":
+            return generate_error_data(errors.TOKEN_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
+
+        if not auth_data.PASSWORD in request_body or request_body[auth_data.PASSWORD] == "":
+            return generate_error_data(errors.PASSWORD_NOT_PRESENT, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
+
+        try:
+            user_data["token"] = str(request_body[auth_data.TOKEN])
+            user_data["password"] = str(request_body[auth_data.PASSWORD])
+        except:
+            return generate_error_data(errors.TOKEN_INVALID, user_ip=user_ip), HTTPStatus.UNAUTHORIZED
+
+    ####################################################################################################
     else:
         logger.error(f"Why the user has reached this point? - check: {check}")
         return generate_error_data(errors.DATA_NOT_PRESENT), HTTPStatus.UNAUTHORIZED

@@ -36,7 +36,7 @@ MAX_LEN_PASS = 24
 ########################
 
 SPAM_MAX_MESSAGES = 10
-SPAM_MAX_INTERVAL = 5  # Seconds
+SPAM_MAX_INTERVAL = 4  # Seconds
 SPAM_BAN_TIME = 900  # Seconds
 
 
