@@ -46,6 +46,9 @@ oportunity_routing_blueprint = Blueprint("oportunity_routing", __name__)
 
 
 def get_image(images):
+    if images == None:
+        return ""
+
     medium = images.get("medium", None)
     if medium:
         return medium[0]
@@ -60,79 +63,82 @@ def get_image(images):
 @oportunity_routing_blueprint.route("/get_oportunities", methods=["GET"])
 def get_oportinities():
     """
-    Returns the product matching the uuid.
+    Returns the products with a discount greater than 20%.
 
-    :param uuid: identify the product
-    :return: dictionary the product specifications
+    :return: dictionary of products (uuid, name, shop, price and image)
     """
-    remove_columns = ["table", "result", "_start", "_stop", "_field", "_measurement"]
-    #
-
+    remove_columns = ["table", "result", "_start", "_stop", "_field", "_measurement", "shop"]
     query = f"""
         from(bucket:"{INFLUXDB_BUCKET}")
             |> range(start: -7d, stop: -1d) // Retrieve data for the last 7 days
             |> filter(fn: (r) => r["_measurement"] == "prices")
             |> filter(fn: (r) => r["_field"] == "price")
-            |> min()
+            |> group(columns: ["uuid"])
+            |> min(column: "_value")
             |> yield(name: "min_price")
         """
     min_price_table = query_api.query_data_frame(query=query)
     min_price_table = min_price_table.drop(columns=remove_columns)
-    min_price_table = min_price_table.groupby(["uuid", "shop"])
 
-    # Create a dictionary to store the minimum prices by product and shop
     min_prices = {}
 
-    # Iterate over the 'min_price' table and populate the 'min_prices' dictionary
-    for grouped_keys, grouped_data in min_price_table:
-        product_uuid, shop = grouped_keys
-        price = float(grouped_data["_value"])
+    for index, row in min_price_table.iterrows():
+        product_uuid = row["uuid"]
+        price = float(row["_value"])
 
         if product_uuid not in min_prices:
-            min_prices[product_uuid] = {}
+            min_prices[product_uuid] = {"price": price}
 
-        min_prices[product_uuid][shop] = price
-
+    remove_columns = ["table", "result", "_start", "_stop", "_field", "_measurement"]
     query = f"""
         from(bucket:"{INFLUXDB_BUCKET}")
             |> range(start: -1d) // Retrieve data for the last 1 day (current day)
             |> filter(fn: (r) => r["_measurement"] == "prices")
             |> filter(fn: (r) => r["_field"] == "price")
-            |> last()
+            |> group(columns: ["uuid"])
+            |> min(column: "_value")
             |> yield(name: "current_price")
         """
     current_price_table = query_api.query_data_frame(query=query)
     current_price_table = current_price_table.drop(columns=remove_columns)
-    current_price_table = current_price_table.groupby(["uuid", "shop"])
 
-    result = {10: [], 20: [], 30: []}
+    result = {20: [], 30: [], 40: [], 50: []}
     # Iterate over the 'current_price' table and compare with the minimum prices
     session = Session()
-    for grouped_keys, grouped_data in current_price_table:
-        product_uuid, shop = grouped_keys
-        price = float(grouped_data["_value"])
+    for index, row in current_price_table.iterrows():
+        shop = row["shop"]
+        product_uuid = row["uuid"]
+        current_price = float(row["_value"])
 
-        if product_uuid in min_prices and shop in min_prices[product_uuid]:
-            min_price = min_prices[product_uuid][shop]
+        if product_uuid not in min_prices:
+            continue
 
-            product = {"uuid": product_uuid, "shop": shop, "price": price}
-            if price * 1.1 <= min_price and price * 1.3 < min_price:
-                db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
-                product["name"] = db_product.name
-                product["image"] = get_image(db_product.images)
-                result[10].append(product)
+        lowest_price = min_prices[product_uuid]["price"]
+        product = {"uuid": product_uuid, "shop": shop, "price": current_price}
 
-            elif price * 1.2 <= min_price and price * 1.3 < min_price:
-                db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
-                product["name"] = db_product.name
-                product["image"] = get_image(db_product.images)
-                result[20].append(product)
+        if current_price * 1.5 <= lowest_price:
+            db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
+            product["name"] = db_product.name
+            product["image"] = get_image(db_product.images)
+            result[50].append(product)
 
-            elif price * 1.3 <= min_price:
-                db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
-                product["name"] = db_product.name
-                product["image"] = get_image(db_product.images)
-                result[30].append(product)
+        if current_price * 1.4 <= lowest_price:
+            db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
+            product["name"] = db_product.name
+            product["image"] = get_image(db_product.images)
+            result[40].append(product)
+
+        if current_price * 1.3 <= lowest_price:
+            db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
+            product["name"] = db_product.name
+            product["image"] = get_image(db_product.images)
+            result[30].append(product)
+
+        elif current_price * 1.2 <= lowest_price:
+            db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
+            product["name"] = db_product.name
+            product["image"] = get_image(db_product.images)
+            result[20].append(product)
 
     session.close()
     return result
