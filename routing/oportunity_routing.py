@@ -115,30 +115,30 @@ def get_oportinities():
 
         lowest_price = min_prices[product_uuid]["price"]
         product = {"uuid": product_uuid, "shop": shop, "price": current_price}
-
+        percent = 0
         if current_price * 1.5 <= lowest_price:
-            db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
-            product["name"] = db_product.name
-            product["image"] = get_image(db_product.images)
-            result[50].append(product)
+            percent = 50
 
-        if current_price * 1.4 <= lowest_price:
-            db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
-            product["name"] = db_product.name
-            product["image"] = get_image(db_product.images)
-            result[40].append(product)
+        elif current_price * 1.4 <= lowest_price:
+            percent = 40
 
-        if current_price * 1.3 <= lowest_price:
-            db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
-            product["name"] = db_product.name
-            product["image"] = get_image(db_product.images)
-            result[30].append(product)
+        elif current_price * 1.3 <= lowest_price:
+            percent = 30
 
         elif current_price * 1.2 <= lowest_price:
-            db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
-            product["name"] = db_product.name
-            product["image"] = get_image(db_product.images)
-            result[20].append(product)
+            percent = 20
+
+        else:
+            continue
+
+        if percent == 0:
+            continue
+
+        db_product = session.query(Product).filter(Product.uuid == product_uuid).first()
+        product["name"] = db_product.name
+        product["image"] = get_image(db_product.images)
+        result[percent].append(product)
+        continue
 
     session.close()
     return result
