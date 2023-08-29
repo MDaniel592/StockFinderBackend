@@ -116,16 +116,16 @@ def get_oportinities():
         lowest_price = min_prices[product_uuid]["price"]
         product = {"uuid": product_uuid, "shop": shop, "price": current_price}
         percent = 0
-        if current_price * 1.5 <= lowest_price:
+        if current_price <= lowest_price * 0.5:
             percent = 50
 
-        elif current_price * 1.4 <= lowest_price:
+        elif current_price <= lowest_price * 0.6:
             percent = 40
 
-        elif current_price * 1.3 <= lowest_price:
+        elif current_price <= lowest_price * 0.7:
             percent = 30
 
-        elif current_price * 1.2 <= lowest_price:
+        elif current_price <= lowest_price * 0.8:
             percent = 20
 
         else:

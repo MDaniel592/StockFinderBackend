@@ -109,9 +109,12 @@ def get_product(uuid):
         logger.warning(f"No hay datos del producto {product_dict}")
         return {}
 
+    product_dict = product_dict["product_data"][0]
+
     params = {
-        "_start": datetime.datetime(2022, 1, 1).astimezone(pytz.timezone("CET")),
-        "_end": datetime.datetime.now(pytz.timezone("CET")) + datetime.timedelta(days=1),
+        # "_start": datetime.datetime(2022, 1, 1).astimezone(pytz.timezone("CET")),
+        "_start": datetime.datetime.now(pytz.timezone("CET")) - datetime.timedelta(days=365),
+        "_end": datetime.datetime.now(pytz.timezone("CET")),
     }
 
     query = f"""
@@ -123,64 +126,44 @@ def get_product(uuid):
         """
 
     historical_prices = {}
-    labels = []
     try:
+        labels = []
+        datasets = []
+
         df = query_api.query_data_frame(query=query, params=params)
         remove_columns = ["table", "result", "_start", "_stop", "_field", "_measurement", "uuid"]
         df = df.drop(columns=remove_columns)
 
-        df["_time"] = pd.to_datetime(df["_time"].dt.date)
         df_min_values = df.groupby(["_time", "shop"]).min().reset_index()
+        shop_counts = df.groupby(["shop"]).size().to_dict()
+        date_list = df_min_values["_time"].unique().tolist()
 
-        time_list = df_min_values["_time"].tolist()
-        for time in time_list:
-            formatted_time = time.strftime("%Y-%m-%d")
-            if formatted_time in labels:
-                continue
-            labels.append(formatted_time)
-
-        datasets = []
-        groups = df_min_values.groupby("shop")
-        shop_counts = groups.size().to_dict()
+        labels_check = False
         for shop in shop_counts:
-            if shop_counts[shop] == len(labels):
-                continue
+            data_dict = {"label": shop, "data": []}
+            for date in date_list:
+                if not labels_check:
+                    formatted_date = date.strftime("%Y-%m-%d")
+                    if formatted_date not in labels:
+                        labels.append(formatted_date)
 
-            times = df_min_values["_time"].unique()
-            shops = df_min_values["shop"].unique()
-            rows = []
-            for time in times:
-                for shop in shops:
-                    row = {"_time": time, "shop": shop}
-                    values = df_min_values.loc[(df_min_values["_time"] == time) & (df_min_values["shop"] == shop), "_value"]
-                    if values.empty:
-                        row["_value"] = "null"
-                    else:
-                        row["_value"] = values.iloc[0]
-                    rows.append(row)
+                values = df_min_values.loc[(df_min_values["_time"] == date) & (df_min_values["shop"] == shop), "_value"]
+                if values.empty:
+                    value = None
+                else:
+                    value = values.iloc[0]
 
-            df_min_values = pd.DataFrame(rows)
+                data_dict["data"].append(value)
 
-        groups = df_min_values.groupby("shop")
-        for name, group in groups:
-            data = {
-                "label": name,
-                "data": group["_value"].tolist(),
-            }
-            datasets.append(data)
+            labels_check = True
+            datasets.append(data_dict)
 
         historical_prices = {"labels": labels, "datasets": datasets}
 
     except:
         logger.error(errors.HISTORICAL_PRICES_NOT_GATHERED)
-        product_dict = product_dict["product_data"][0]
         return product_dict
 
-    try:
-        product_dict = product_dict["product_data"][0]
-        product_dict["historical_prices"] = historical_prices
-        valid_messages.petition_completed(f"product: {uuid}")
-        return product_dict
-    except:
-        logger.error(errors.RESPONSE_EMPTY)
-        return {}
+    product_dict["historical_prices"] = historical_prices
+    valid_messages.petition_completed(f"product: {uuid}")
+    return product_dict
