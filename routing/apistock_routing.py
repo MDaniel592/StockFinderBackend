@@ -17,6 +17,7 @@ apistock_routing_blueprint = Blueprint("apistock_routing", __name__)
 
 ## Allowed categories
 CATEGORIES = {
+    "monitores": "Monitor",
     "procesadores": "CPU",
     "tarjetas-graficas": "GPU",
     "placas-base": "Motherboard",
@@ -184,6 +185,11 @@ def get_category_products(category):
         additional_str = """
                             MIN(substring(specs->>'Tamaño Memoria', '\d+')::int) as min_memory,
                             MAX(substring(specs->>'Tamaño Memoria', '\d+')::int) as max_memory,
+                            """
+    elif category == "Monitor":
+        additional_str = """
+                            MIN(substring(specs->>'Tamaño', '\d+')::int) as min_size,
+                            MAX(substring(specs->>'Tamaño', '\d+')::int) as max_size,
                             """
     elif category == "Chassis":
         additional_str = """

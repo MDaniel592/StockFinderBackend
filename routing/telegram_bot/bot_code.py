@@ -17,7 +17,7 @@ dispatcher = updater.dispatcher
 
 CODE_LENGTH = 6
 SPAM_MESSAGES = 10
-SPAM_INTERVAL = 10
+SPAM_INTERVAL = 5
 BAN_TIME = 300
 
 SPAMS = {}
