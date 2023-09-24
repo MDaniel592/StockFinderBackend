@@ -25,9 +25,9 @@ def valid_data_recv(request_body, check):
         return generate_error_data(errors.USER_IP_NOT_PRESENT), HTTPStatus.UNAUTHORIZED
 
     user_ip = request_body[auth_data.USER_IP]
-    result, data = check_user_spam(user_ip)
-    if result:
-        return data, HTTPStatus.UNAUTHORIZED
+    # result, data = check_user_spam(user_ip)
+    # if result:
+    #     return data, HTTPStatus.UNAUTHORIZED
 
     user_data = {"user_ip": user_ip}
 
